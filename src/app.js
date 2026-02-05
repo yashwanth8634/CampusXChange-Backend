@@ -1,9 +1,14 @@
 const express = require('express');
+require('dotenv').config();
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
 const initializeSocket = require('./config/socket');
+const connectDB = require('./db/db');
+
+// Connect to Database
+connectDB();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -80,4 +85,8 @@ app.use((req, res) => {
 // Error handler middleware (should be last)
 app.use(errorHandler);
 
-module.exports = { app, server, io };
+// Vercel requires the app to be the default export
+module.exports = app;
+// Attach server and io for local usage in server.js
+module.exports.server = server;
+module.exports.io = io;
