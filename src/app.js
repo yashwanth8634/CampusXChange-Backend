@@ -11,8 +11,16 @@ const connectDB = require('./db/db.js');
 const app = express();
 const server = http.createServer(app);
 
-// Connect to Database
-connectDB();
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');

@@ -18,9 +18,15 @@ const connectDB = async () => {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-    }).then((mongoose) => mongoose);
+    const opts = {
+      bufferCommands: true, // Enable buffering to handle race conditions
+      serverSelectionTimeoutMS: 5000,
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('MongoDB Connected');
+      return mongoose;
+    });
   }
 
   cached.conn = await cached.promise;
