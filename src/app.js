@@ -5,20 +5,20 @@ const socketIO = require('socket.io');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
 const initializeSocket = require('./config/socket');
-const connectDB = require('./db/db');
+const connectDB = require('./db/db.js');
+
+// Initialize express app
+const app = express();
+const server = http.createServer(app);
 
 // Connect to Database
-connectDB();
+await connectDB();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const messageRoutes = require('./routes/messageRoutes');
-
-// Initialize express app
-const app = express();
-const server = http.createServer(app);
 
 // Initialize Socket.IO
 const io = socketIO(server, {
