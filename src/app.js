@@ -12,7 +12,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Connect to Database
-await connectDB();
+connectDB();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
