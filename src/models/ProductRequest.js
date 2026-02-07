@@ -21,11 +21,9 @@ const productRequestSchema = new mongoose.Schema({
     enum: [
       'Books',
       'Electronics',
-      'Furniture',
       'Clothing',
       'Sports',
       'Stationery',
-      'Vehicles',
       'Other'
     ]
   },

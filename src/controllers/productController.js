@@ -6,7 +6,7 @@ const { verifyToken } = require('../utils/jwt');
 // Create new product
 exports.createProduct = async (req, res) => {
   try {
-    const { title, description, price, category, location } = req.body;
+    const { title, description, price, category, location, productType } = req.body;
 
     // Validate required fields
     if (!title || !description || !price || !category) {
@@ -42,7 +42,8 @@ exports.createProduct = async (req, res) => {
       category,
       location,
       images: imageUrls,
-      seller: req.user._id
+      seller: req.user._id,
+      productType: productType || 'sell'
     });
 
     await product.save();
@@ -371,5 +372,77 @@ exports.markAsSold = async (req, res) => {
       success: false,
       message: 'Error updating product status.'
     });
+  }
+};
+
+// Start Rent
+exports.startRent = async (req, res) => {
+  try {
+    const { renterId } = req.body; // Provided by seller or implicitly from a request context
+    const product = await Product.findById(req.params.id);
+
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (product.productType !== 'rent') {
+      return res.status(400).json({ success: false, message: 'This product is not for rent' });
+    }
+    if (product.status === 'rented') {
+      return res.status(400).json({ success: false, message: 'Product is already rented' });
+    }
+
+    product.status = 'rented';
+    product.currentRent = {
+      renter: renterId || null, // Optional if just marking as rented generally
+      startTime: new Date()
+    };
+    await product.save();
+
+    res.json({ success: true, message: 'Rent started', product });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// End Rent
+exports.endRent = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (product.status !== 'rented') {
+      return res.status(400).json({ success: false, message: 'Product is not currently rented' });
+    }
+
+    const endTime = new Date();
+    const startTime = product.currentRent?.startTime || endTime;
+    const durationMs = endTime - new Date(startTime);
+    const durationHours = Math.ceil(durationMs / (1000 * 60 * 60)); // Ceil to next hour
+    const totalCost = durationHours * product.price; // Price acts as hourly rate
+
+    // Reset status
+    product.status = 'available';
+    product.currentRent = undefined; 
+    // Ideally we would push to a rent history here
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Product returned',
+      summary: {
+        startTime,
+        endTime,
+        durationHours,
+        hourlyRate: product.price,
+        totalCost
+      },
+      product
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

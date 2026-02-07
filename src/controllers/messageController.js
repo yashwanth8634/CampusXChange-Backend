@@ -1,6 +1,8 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Product = require('../models/Product');
+const User = require('../models/User');
+const axios = require('axios');
 
 // Create or get conversation
 exports.createConversation = async (req, res) => {
@@ -31,15 +33,22 @@ exports.createConversation = async (req, res) => {
       });
     }
 
-    // Check if conversation already exists
+    // Check if conversation already exists between these participants
     let conversation = await Conversation.findOne({
-      participants: { $all: [req.user._id, sellerId] },
-      product: productId
+      participants: { $all: [req.user._id, sellerId] }
     }).populate('participants', 'name mobile profilePicture')
       .populate('product', 'title price images')
       .populate('lastMessage');
 
     if (conversation) {
+      // Update product context if it's different (so chat header shows current item of interest)
+      if (conversation.product && conversation.product._id.toString() !== productId) {
+        conversation.product = productId;
+        await conversation.save();
+        // Re-populate new product details
+        await conversation.populate('product', 'title price images');
+      }
+
       return res.json({
         success: true,
         conversation
@@ -186,6 +195,26 @@ exports.sendMessage = async (req, res) => {
     // Emit socket event (to be handled by socket.io)
     if (req.io) {
       req.io.to(conversationId).emit('new-message', message);
+    }
+
+    // Send push notification
+    try {
+      const recipientId = conversation.participants.find(p => p.toString() !== req.user._id.toString());
+      if (recipientId) {
+        const recipient = await User.findById(recipientId);
+        if (recipient && recipient.pushToken) {
+          await axios.post('https://exp.host/--/api/v2/push/send', {
+            to: recipient.pushToken,
+            sound: 'default',
+            title: `New Message from ${req.user.name}`,
+            body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+            data: { conversationId: conversation._id },
+          });
+        }
+      }
+    } catch (pushError) {
+      console.error('Push notification error:', pushError.message);
+      // Don't fail the request if push fails
     }
 
     res.status(201).json({

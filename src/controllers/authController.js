@@ -281,7 +281,7 @@ exports.getCurrentUser = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, pushToken } = req.body;
     
     // Check if duplicate name or email (excluding current user)
     if (name || email) {
@@ -305,6 +305,7 @@ exports.updateProfile = async (req, res) => {
     const updates = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
+    if (pushToken) updates.pushToken = pushToken;
 
     // Handle profile picture update
     if (req.file) {

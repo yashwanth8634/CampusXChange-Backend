@@ -15,4 +15,7 @@ router.put('/:id', auth, productController.updateProduct);
 router.delete('/:id', auth, productController.deleteProduct);
 router.patch('/:id/mark-sold', auth, productController.markAsSold);
 
+router.post('/:id/start-rent', auth, productController.startRent);
+router.post('/:id/end-rent', auth, productController.endRent);
+
 module.exports = router;

@@ -1,4 +1,6 @@
 const ProductRequest = require('../models/ProductRequest');
+const User = require('../models/User');
+const axios = require('axios');
 
 // Create product request
 exports.createRequest = async (req, res) => {
@@ -21,6 +23,29 @@ exports.createRequest = async (req, res) => {
 
     await productRequest.save();
     await productRequest.populate('requester', 'name mobile');
+
+    // Notify all users about the new request
+    try {
+      const users = await User.find({
+        pushToken: { $exists: true, $ne: null },
+        _id: { $ne: req.user._id }
+      }).select('pushToken');
+
+      const pushTokens = users.map(u => u.pushToken);
+
+      if (pushTokens.length > 0) {
+        await axios.post('https://exp.host/--/api/v2/push/send', {
+          to: pushTokens,
+          sound: 'default',
+          title: 'New Product Request',
+          body: `${req.user.name} is looking for ${category}: ${title}`,
+          data: { requestId: productRequest._id, type: 'request' },
+        });
+      }
+    } catch (notifError) {
+      console.error('Notification Error:', notifError.message);
+      // Continue execution even if notification fails
+    }
 
     res.status(201).json({
       success: true,

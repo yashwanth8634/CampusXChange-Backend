@@ -49,6 +49,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Student photo is required']
   },
+  pushToken: {
+    type: String
+  },
   createdAt: {
     type: Date,
     default: Date.now

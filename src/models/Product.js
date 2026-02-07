@@ -26,11 +26,9 @@ const productSchema = new mongoose.Schema({
     enum: [
       'Books',
       'Electronics',
-      'Furniture',
       'Clothing',
       'Sports',
       'Stationery',
-      'Vehicles',
       'Other'
     ]
   },
@@ -43,10 +41,19 @@ const productSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  productType: {
+    type: String,
+    enum: ['sell', 'rent'],
+    default: 'sell'
+  },
   status: {
     type: String,
-    enum: ['available', 'sold', 'reserved'],
+    enum: ['available', 'sold', 'reserved', 'rented'],
     default: 'available'
+  },
+  currentRent: {
+    renter: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    startTime: { type: Date }
   },
   location: {
     type: String,
