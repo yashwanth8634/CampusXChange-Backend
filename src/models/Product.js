@@ -56,6 +56,10 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  viewedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   isFeatured: {
     type: Boolean,
     default: false

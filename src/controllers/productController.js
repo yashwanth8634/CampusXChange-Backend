@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const ProductRequest = require('../models/ProductRequest');
 const { uploadMultipleImages } = require('../services/imageService');
+const { verifyToken } = require('../utils/jwt');
 
 // Create new product
 exports.createProduct = async (req, res) => {
@@ -176,9 +177,32 @@ exports.getProduct = async (req, res) => {
       });
     }
 
-    // Increment views
-    product.views += 1;
-    await product.save();
+    // Unique View Counting Logic
+    const authHeader = req.header('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = verifyToken(token);
+        
+        // Initialize viewedBy if it doesn't exist
+        if (!product.viewedBy) {
+          product.viewedBy = [];
+        }
+
+        const userId = decoded.userId;
+        const hasViewed = product.viewedBy.some(id => id.toString() === userId);
+
+        // If user ID is valid and not in viewedBy list
+        if (userId && !hasViewed) {
+          product.viewedBy.push(userId);
+          product.views += 1;
+          await product.save();
+        }
+      } catch (err) {
+        // Token error - ignore and don't count view
+        console.log('View count token error:', err.message);
+      }
+    }
 
     res.json({
       success: true,

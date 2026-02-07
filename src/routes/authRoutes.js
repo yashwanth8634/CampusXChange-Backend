@@ -12,6 +12,6 @@ router.post('/login', authController.login);
 
 // Protected routes
 router.get('/me', auth, authController.getCurrentUser);
-router.put('/update-profile', auth, authController.updateProfile);
+router.put('/update-profile', auth, upload.single('photo'), authController.updateProfile);
 
 module.exports = router;

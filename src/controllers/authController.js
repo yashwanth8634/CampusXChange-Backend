@@ -25,9 +25,10 @@ exports.register = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ $or: [{ mobile }, { rollNo }, { email }] });
+    const existingUser = await User.findOne({ $or: [{ name }, { mobile }, { rollNo }, { email }] });
     if (existingUser) {
       let message = 'User already registered.';
+      if (existingUser.name === name) message = 'Username is already taken.';
       if (existingUser.mobile === mobile) message = 'Mobile number already registered.';
       if (existingUser.rollNo === rollNo) message = 'Roll number already registered.';
       if (existingUser.email === email) message = 'Email already registered.';
@@ -129,7 +130,8 @@ exports.verifyOTP = async (req, res) => {
         id: user._id,
         name: user.name,
         mobile: user.mobile,
-        email: user.email
+        email: user.email,
+        rollNo: user.rollNo
       }
     });
   } catch (error) {
@@ -239,7 +241,8 @@ exports.login = async (req, res) => {
         name: user.name,
         mobile: user.mobile,
         email: user.email,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        rollNo: user.rollNo
       }
     });
   } catch (error) {
@@ -262,6 +265,7 @@ exports.getCurrentUser = async (req, res) => {
         mobile: req.user.mobile,
         email: req.user.email,
         profilePicture: req.user.profilePicture,
+        rollNo: req.user.rollNo,
         createdAt: req.user.createdAt
       }
     });
@@ -279,9 +283,34 @@ exports.updateProfile = async (req, res) => {
   try {
     const { name, email } = req.body;
     
+    // Check if duplicate name or email (excluding current user)
+    if (name || email) {
+      const existingUser = await User.findOne({
+        $and: [
+          { _id: { $ne: req.user._id } },
+          { $or: [{ name }, { email }] }
+        ]
+      });
+
+      if (existingUser) {
+        if (existingUser.name === name) {
+          return res.status(400).json({ success: false, message: 'Username is already taken.' });
+        }
+        if (existingUser.email === email) {
+          return res.status(400).json({ success: false, message: 'Email is already registered.' });
+        }
+      }
+    }
+    
     const updates = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
+
+    // Handle profile picture update
+    if (req.file) {
+      const imageUrl = await uploadImage(req.file.buffer, req.file.originalname);
+      updates.profilePicture = imageUrl;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -297,10 +326,17 @@ exports.updateProfile = async (req, res) => {
         name: user.name,
         mobile: user.mobile,
         email: user.email,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        rollNo: user.rollNo
       }
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or Email is already taken.'
+      });
+    }
     console.error('Update Profile Error:', error);
     res.status(500).json({
       success: false,
