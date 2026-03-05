@@ -115,24 +115,26 @@ exports.getAllProducts = async (req, res) => {
         .populate('seller', 'name mobile')
         .sort(sort)
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       ProductRequest.find(requestQuery)
         .populate('requester', 'name mobile')
         .sort(sort)
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       Product.countDocuments(productQuery),
       ProductRequest.countDocuments(requestQuery)
     ]);
 
     // Combine and mark type
     const productsWithType = products.map(p => ({
-      ...p.toObject(),
+      ...p,
       type: 'product'
     }));
 
     const requestsWithType = requests.map(r => ({
-      ...r.toObject(),
+      ...r,
       type: 'request',
       seller: r.requester // Alias for consistency in frontend
     }));
@@ -234,7 +236,8 @@ exports.getMyProducts = async (req, res) => {
       Product.find(query)
         .sort('-createdAt')
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       Product.countDocuments(query)
     ]);
 

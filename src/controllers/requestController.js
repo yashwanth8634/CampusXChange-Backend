@@ -29,7 +29,7 @@ exports.createRequest = async (req, res) => {
       const users = await User.find({
         pushToken: { $exists: true, $ne: null },
         _id: { $ne: req.user._id }
-      }).select('pushToken');
+      }).select('pushToken').lean();
 
       const pushTokens = users.map(u => u.pushToken);
 
@@ -84,7 +84,8 @@ exports.getAllRequests = async (req, res) => {
         .populate('requester', 'name mobile')
         .sort('-createdAt')
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       ProductRequest.countDocuments(query)
     ]);
 
@@ -111,7 +112,8 @@ exports.getAllRequests = async (req, res) => {
 exports.getRequest = async (req, res) => {
   try {
     const productRequest = await ProductRequest.findById(req.params.id)
-      .populate('requester', 'name mobile email');
+      .populate('requester', 'name mobile email')
+      .lean();
 
     if (!productRequest) {
       return res.status(404).json({
@@ -149,7 +151,8 @@ exports.getMyRequests = async (req, res) => {
       ProductRequest.find(query)
         .sort('-createdAt')
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       ProductRequest.countDocuments(query)
     ]);
 

@@ -89,7 +89,8 @@ exports.getConversations = async (req, res) => {
       .populate('participants', 'name mobile profilePicture')
       .populate('product', 'title price images status')
       .populate('lastMessage')
-      .sort('-updatedAt');
+      .sort('-updatedAt')
+      .lean();
 
     res.json({
       success: true,
@@ -109,7 +110,8 @@ exports.getConversation = async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.id)
       .populate('participants', 'name mobile email profilePicture')
-      .populate('product', 'title price images status seller');
+      .populate('product', 'title price images status seller')
+      .lean();
 
     if (!conversation) {
       return res.status(404).json({
@@ -263,7 +265,8 @@ exports.getMessages = async (req, res) => {
         .populate('sender', 'name profilePicture')
         .sort('-createdAt')
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(Number(limit))
+        .lean(),
       Message.countDocuments({ conversation: conversationId })
     ]);
 

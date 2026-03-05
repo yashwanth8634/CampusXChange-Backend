@@ -21,6 +21,9 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: true, // Enable buffering to handle race conditions
       serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,       // Max connections in pool
+      minPoolSize: 2,        // Keep at least 2 connections warm
+      socketTimeoutMS: 45000 // Close idle sockets after 45s
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
