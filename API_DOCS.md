@@ -9,10 +9,72 @@
 ## Table of Contents
 
 - [Authentication](#authentication)
-- [Products](#products)
-- [Requests](#requests)
-- [Chat/Messages](#chatmessages)
-- [Error Handling](#error-handling)
+- [Ratings](#ratings)
+
+## Ratings
+
+### Rate a Product or Seller
+
+**POST** `/api/ratings`  
+🔒 **Protected**
+
+Submit a rating for a product or a seller. A user can rate each product or seller only once (subsequent requests update the rating).
+
+**Request:**
+
+```json
+{
+  "productId": "<product_id>", // optional, for product rating
+  "sellerId": "<seller_id>", // optional, for seller rating
+  "rating": 4, // required, integer 1-5
+  "comment": "Great product!" // optional
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "message": "Rating submitted successfully.",
+  "rating": {
+    "_id": "<rating_id>",
+    "rater": { "_id": "<user_id>" },
+    "product": "<product_id>",
+    "seller": "<seller_id>",
+    "rating": 4,
+    "comment": "Great product!",
+    "createdAt": "2026-03-30T12:00:00.000Z"
+  }
+}
+```
+
+---
+
+### Get Ratings for Product or Seller
+
+**GET** `/api/ratings?productId=<product_id>`
+
+**GET** `/api/ratings?sellerId=<seller_id>`
+
+Fetch all ratings for a product or seller.
+
+**Response (200):**
+
+```json
+{
+  "ratings": [
+    {
+      "_id": "<rating_id>",
+      "rater": { "_id": "<user_id>", "name": "Alice", "profilePicture": "..." },
+      "rating": 5,
+      "comment": "Excellent!",
+      "createdAt": "2026-03-30T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
 
 ---
 

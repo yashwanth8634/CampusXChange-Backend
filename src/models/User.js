@@ -49,6 +49,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Student photo is required']
   },
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  ratingCount: {
+    type: Number,
+    default: 0
+  },
   pushToken: {
     type: String
   },

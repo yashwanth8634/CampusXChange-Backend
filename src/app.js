@@ -27,6 +27,7 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const ratingRoutes = require('./routes/ratingRoutes');
 
 // Initialize Socket.IO
 const io = socketIO(server, {
@@ -56,6 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/chat', messageRoutes);
+app.use('/api/ratings', ratingRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -77,7 +79,8 @@ app.get('/', (req, res) => {
       products: '/api/products',
       requests: '/api/requests',
       chat: '/api/chat',
-      health: '/api/health'
+      health: '/api/health',
+      ratings: '/api/ratings'
     }
   });
 });
